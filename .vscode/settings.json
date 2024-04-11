@@ -1,0 +1,13 @@
+{
+  "python.analysis.extraPaths": [
+    "./src/test/Test",
+    "./src/test/Test",
+    "./target/ZCode",
+    "./src/main/zcode/utils",
+    "./src/test",
+    "./target",
+    "./src/main/zcode/parser",
+    "./src/main/zcode/astgen",
+    "./src/main/zcode/checker"
+  ]
+}
