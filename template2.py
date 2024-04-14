@@ -1,280 +1,542 @@
+"""
+^name : Võ Tiến
+^FB : https://www.facebook.com/profile.php?id=100056605580171
+^GROUP: https://www.facebook.com/groups/211867931379013/
+^DAY : 10/4/2024
+"""
+
+"""
+Kiến thức cần 
+List : https://www.w3schools.com/python/python_lists.asp
+Dict : https://www.w3schools.com/python/python_dictionaries.asp
+isinstance() : https://www.w3schools.com/python/ref_func_isinstance.asp
+"""
+
 from AST import *
 from Visitor import *
 from Utils import Utils
 from StaticError import *
 from functools import reduce
 
-class Zcode:
+"""
+    * Type gồm
+        * NumberType, BoolType, StringType
+        * ArrayType : gồm size, eleType (NumberType, BoolType, StringType)
+        * ArrayZcode : eleType chỉ bao gồm các type kiểu Zcode và ArrayZcode, typ chưa được suy diễn
+        * Zcode : typ chưa được suy diễn cần xác định khi lần dùng đầu tiên
+            *  FuncZcode : kiểu typ của hàm chưa suy diễn or có thể đã được suy diễn gồm
+                ^ param : danh sách các biến cần truyền vào hàm được biểu diễn dưới dạng danh sách kiêu
+                ^ typ : kiểu type của hàm hiện tại nếu typ là None thì hàm này chưa xác định kiểu ngược lại có typ thì đã xác định được kiểu
+                ^ body : xem thử hàm khai báo trước 1 phần (nghĩa là không có body) hay không
+            * VarZcode : kiểu typ của biến chưa được suy diễn or có thể đã được suy diễn
+                ^ typ : kiểu type của hàm hiện tại nếu typ là None thì biến này chưa xác định kiểu ngược lại có typ thì đã xác định được kiểu
+"""
+
+class Zcode(Type):
     pass
 
 class FuncZcode(Zcode):
+    #* param : list[Type]
+    #* typ : Type có thể là number, bool, string, arrayType or None (có thể hiểu nhanh đang FuncZcode)
+        #! -> nên khi gọi callFunc thì trả về typ nếu có (khác None) không thì trả về chính nó this (FuncZcode)
+    #* body : Bool nếu là true nghĩa là body đã có (khai báo toàn bộ có body hàm), nếu False nghĩa là khai báo 1 phần (khai báo không có body)
     def __init__(self, param = [], typ = None, body = False):
         self.param = param
         self.typ = typ
         self.body = body
 
 class VarZcode(Zcode):
+    #* typ : Type có thể là number, bool, string, arrayType or None (có thể hiểu nhanh đang FuncZcode)
+        #! -> nên khi gọi callFunc thì trả về typ nếu có (khác None) không thì trả về chính nó this (VarZcode)    
     def __init__(self, typ = None):
         self.typ = typ    
 
+class ArrayZcode(Type):
+    #* eleType: List[Type]
+    #* Type ở đây có thể là Zcode, ArrayZcode, String, bool, number, arraytype
+    def __init__(self, eleType):
+        self.eleType = eleType
 
 class StaticChecker(BaseVisitor, Utils):
-    def __init__(self,ast, ):
-        self.ast = ast
+    #* ast : cây ở BTL2
+    #* BlockFor : int, kiểm tra xem chúng ta đang ở trong vòng for thứ mấy
+    #* function: FuncZcode, kiểm tra hàm hiện tại chúng ta đang vào body của nó checkStatic
+    #* listFunction : Dict<string, FuncZcode>, Danh sách các hàm, ban đầu sẽ mặc định các hàm read, write file
+    #* return : Bool, kiểm tra hàm hiện tại có return hay không nếu không có thì xác đinh hàm này là VoidType
+    def __init__(self,ast):
+        self.ast = ast 
         self.BlockFor = 0
         self.function = None
         self.Return = False
-        self.listFunction = [{
-                "readNumber" : FuncZcode([], NumberType(), True),
-                "readBool" : FuncZcode([], BoolType(), True),
-                "readString" : FuncZcode([], StringType(), True),
-                "writeNumber" : FuncZcode([NumberType()], VoidType(), True),
-                "writeBool" : FuncZcode([BoolType()], VoidType(), True),
-                "writeString" : FuncZcode([StringType()], VoidType(), True)
-                }]
+        self.listFunction = {
+            "readNumber" : FuncZcode([], NumberType(), True),
+            "readBool" : FuncZcode([], BoolType(), True),
+            "readString" : FuncZcode([], StringType(), True),
+            "writeNumber" : FuncZcode([NumberType()], VoidType(), True),
+            "writeBool" : FuncZcode([BoolType()], VoidType(), True),
+            "writeString" : FuncZcode([StringType()], VoidType(), True)
+        }
+        
         
     def check(self):
         self.visit(self.ast, [{}])
         return None
     
-    def comparType(self, LHS, RHS):
-        #TODO: so sánh 2 biến type, kiểm tra array type sẽ kiểm tra size và eletype 
-           
-        if isinstance(LHS, ArrayType) and isinstance(RHS, ArrayType):
-            return type(LHS.eleType) == type(RHS.eleType) and LHS.size == RHS.size
-        else:
-            return type(LHS) == type(RHS)
-
-    def comparListType(self, LHS, RHS):
-        #TODO: so sánh 2 list type, kiểm tra về độ dài và thứ tự của type trong đó
-           
-        if len(LHS) != len(RHS):
+    """_comparType_
+        #* LHS và RHS chỉ có thể là Void, number, string, bool, arrayType
+        #* TH1 nếu LHS và RHS đều là array
+            #^ xét kích thước size có giống nha không nếu không giống nhau trả Flase
+            #^ xét từng phần tử trong size của 2 thằng nếu không giống nhau trả Flase
+            #^ xét tiếp eleType nếu không giống nhau trả Flase
+        #* TH2 nếu cả 2 không phải array -> so sánh type của 2 nó thôi      
+    """
+    def comparType(self, LHS, RHS): pass
+        #! so sánh 2 type có trùm nhau hay không
+        #! so sánh nếu 2 type đều là array -> kiểm tra từng phần tử trong size có giống hay không về kích thước và giá trị bên trong
+        #! nếu giống thì trả true, ngược lại false
+    
+   
+    def comparListType(self, LHS, RHS): 
+        """_comparListType
+        #* LHS và RHS chỉ có thể list các type sau Void, number, string, bool, arrayType
+        #* TH1 nếu LHS và RHS khác kích thước -> Flase
+        #* duyệt từng phần tử gọi self.comparType(LHS[i], RHS[i])
+        """  
+        
+    def setTypeArray(self, typeArray, typeArrayZcode):
+        #* Trường hợp size khác nhau
+        if typeArray.size[0] != len(typeArrayZcode.eleType):
             return False
-
-        for lhs_item, rhs_item in zip(LHS, RHS):
-            if not self.comparType(lhs_item, rhs_item):
-                return False
-
-        return True
+        
+        
+        if len(typeArray.size) == 1:
+            #TODO implement
+            #* trường hợp bên trong array là các kiểu nguyên thủy (array 1 chiều)
+            #^ nếu typeArrayZcode.eleType[i] là Zcode : gán typeArrayZcode.eleType[i].typ = typeArray.eleType
+             #^ nếu typeArrayZcode.eleType[i] là arrayZcode : trả về False (vì 1 chiều mà bắt gán 2 chiều :) )
+          
+        else:
+            #TODO implement
+            #* trường hợp bên trong array là các arrayType (array >= 2 chiều)
+            #^ nếu typeArrayZcode.eleType[i] là Zcode : gán typeArrayZcode.eleType[i].typ = typeArray.eleType
+            #^ nếu typeArrayZcode.eleType[i] là arrayZcode : gọi đệ quy self.setTypeArray(ArrayType(typeArray.size[1:], typeArray.eleType),typeArrayZcode[i]) để vào bên trong xem có lỗi gì không    
+        
     
     def visitProgram(self, ast, param):
-        #! duyệt qua các biến và hàm toàn cục
-        for decl in ast.decl: self.visit(decl, param)
+        #* duyệt qua các biến và hàm toàn cục
+        for i in ast.decl: self.visit(i, param)
         
-        #TODO check No definition for a function in param
-        for decl_name, decl_desciption in self.listFunction[0].items():
-            if not decl_desciption.body: raise NoDefinition(decl_name)
+        """_NoDefinition_
+            #TODO check No definition for a function in self.listFunction
+            ví dụ 1 -> đúng
+            func foo(number a)
+            func foo(number a) return
             
-        #TODO  check No entry point in param
-        main_func = self.listFunction[0].get('main')
-        if (main_func is None) or (len(main_func.param) > 0) or (type(main_func.typ) != VoidType): 
-            raise NoEntryPoint()
+            ví dụ 2 -> đúng
+            func foo(number a) return
+            
+            ví dụ 3 -> sai NoDefinition
+            func foo(number a)
+        """
+        #TODO implement
 
-        return
+        """_NoEntryPoint_
+            #TODO check No entry Point in listFunction, tìm hàm tên "main"
+            ví dụ 1 -> đúng
+            func main() return
+            
+            ví dụ 2 -> đúng
+            func main()
+            func main() begin
+            end
+            
+            ví dụ 3 -> sai NoEntryPonumber, sai param
+            func main(number a) return
+            
+            ví dụ 4 -> sai NoEntryPonumber, sai returnType
+            func main() return 1       
+            
+            ví dụ 5 -> sai NoEntryPonumber, không tồn tại
+            không có hàm main      
+        """        
+        #TODO implement
 
     def visitVarDecl(self, ast, param):
-        #TODO kiểm tra name có trong param[0] hay không nén ra lỗi Redeclared
-        if param[0].get(ast.name.name) is not None: raise Redeclared(Variable(), ast.name.name)
-        param[0][ast.name.name] = VarZcode(ast.varType)
+        """_Redeclared_
+            #TODO kiểm tra name có trong param[0] hay không nén ra lỗi Redeclared
+            ví dụ 1 -> đúng
+            number a
 
-        #TODO kiểm tra TypeCannotBeInferred và TypeMismatchInStatement xử lí ast.varInit nếu tồn tại
-        if ast.varInit:
-            LHS = self.visit(ast.varType, param) if ast.varType else param[0][ast.name.name]
-            RHS = self.visit(ast.varInit, param)
+            ví dụ 2 -> Redeclared(Variable(), ast.name.name)
+            number a
+            string a    
 
-            #  TH1 : cả 2 đều trả về Zcode -> TypeCannotBeInferred
-            if isinstance(LHS, Zcode) and isinstance(RHS, Zcode):
-                raise TypeCannotBeInferred(stmt=ast)
-            # TH2, 3: nếu 1 trong 2 bên trả về Zcode bên kia xác định type thì gán type của Zcode với type đó
-            elif not isinstance(LHS, Zcode) and isinstance(RHS, Zcode):
-                RHS.typ = LHS
-            elif isinstance(LHS, Zcode) and not isinstance(RHS, Zcode):
-                LHS.typ = RHS
-            # TH4 : cả 2 đều có type nên kiểm tra xem 2 type có giống nhau không
-            elif not self.comparType(LHS, RHS):
-                raise TypeMismatchInStatement(stmt=ast)
+        """           
+        #TODO implement
+        param[0][ast.name.name] = VarZcode(ast.varType) #! cập nhật param mới đưa tên vào, biến dynamic hay var sẽ type = None
+        
+        
+        """_TypeCannotBeInferred_TypeMismatchInStatement_
+            # TODO kiểm tra TypeCannotBeInferred và TypeMismatchInStatement xử lí ast.varInit (nếu khác None)
+            #* nguyên lí LHS (ast.varType) và RHS (ast.varInit), cả 2 đều là Type, chú ý LHS không bao giờ là ArrayZcode
+                #^ TH1 cả 2 đều là Zcode chưa suy diễn được : raise TypeCannotBeInferred(ast)
+                #^ TH2 nếu LHS là Zcode và RHS là ArrayZcode: raise TypeCannotBeInferred(ast) 
+                #^ TH3 nếu LHS không phải Zcode và RHS là ArrayZcode:
+                    #^ TH3.1 nếu LHS là string, bool, number : raise TypeMismatchInStatement(ast) 
+                    #^ TH3.2 nếu LHS là arrayType kiểm tra self.setTypeArray(LHS, RHS) nếu không đúng raise TypeMismatchInStatement(ast)
+                #^ TH4 nếu LHS là Zcode và RHS là string, bool, number, arrytype : LHS.typ = RHS
+                #^ TH5 ngược lại TH4
+                #^ TH6 cả LHS và RHS có kiểu string, bool, number, arrytype -> kiểm tra self.comparType(LHS, RHS): raise TypeMismatchInStatement(ast)
             
-        return param
+            #! TH1 TypeCannotBeInferred
+            func foo()
+            var a <- foo()    
+            
+            #! TH2 TypeCannotBeInferred(ast)
+            dynamic x
+            var a <- [x]
+            
+            #! TH3.1 TypeMismatchInStatement(ast)
+            dynamic xF
+            number a <- [x] -> raise TypeMismatchInStatement(ast) 
+            
+            #! TH3.2 : X = arraytype([3], number)
+            dynamic x
+            number a[1][3] <- [x]
+                        
+            #! TH4, 5 : foo().typ = b.typ = numberType()
+            func foo()
+            number a <- foo()
+            var b <- a            
+
+            #! TH6 TypeMismatchInStatement
+            number a <- "1"                
+        """ 
+        if ast.varInit:
+            #TODO implement
 
     def visitFuncDecl(self, ast, param):
-        #TODO kiểm tra name có trong listFunction hay không nén ra lỗi Redeclared
-        declared_function = self.listFunction[0].get(ast.name.name)
-        
-        #TODO kiểm tra Param trong hàm
-        listParam = {} #! dạng Dict có name
-        typeParam = [] #! dạng mảng không cần name
-        for funcParam in ast.param:
-            id = funcParam.name.name
-            if listParam.get(id): raise Redeclared(Parameter(), id)
-            # Update list param
-            listParam[id] = VarZcode(funcParam.varType)
-            typeParam += [funcParam.varType]
-        
-        self.Return = False
-        body = True if ast.body else False
+        """
+            #TODO kiểm tra name có trong self.listFunction hay không nén ra lỗi Redeclared 
+            ví dụ 1 -> đúng
+            func foo() return
 
-        #TODO chia làm 3 TH
-        if declared_function:
-            #* TH 1: là method đã so sẵn nghĩa là được khai báo 1 phần trước yêu cầu 
-            # kiểm tra 2 list có giống nhau không nếu không nén ra Redeclared
-            if not self.comparListType(typeParam, declared_function.param): 
-                raise Redeclared(Function(), ast.name.name)
-        
-            #* TH2 : method tồn tại trước và khai báo 1 phần    
-            elif not ast.body:
-                raise Redeclared(Function(), ast.name.name)
+            ví dụ 2 -> đúng
+            func foo()
+            func foo() return
             
-            #* TH 3: là khai báo toàn bộ
-            elif declared_function.body:
-                raise Redeclared(Function(), ast.name.name)
+            ví dụ 3 -> Redeclared
+            func foo() return
+            func foo()
 
-            self.listFunction[0][ast.name.name].param = typeParam
-            self.listFunction[0][ast.name.name].body = body
+            ví dụ 4 -> Redeclared
+            func foo()
+            func foo()
+            
+            ví dụ 5 -> Redeclared
+            func foo() return
+            func foo() return
+        """ 
+        method = self.listFunction.get(ast.name.name)
+        #TODO implement
+        
+        
+        
+        listParam = {} #! dạng Dict có name khi visit dùng self.visit(ast.body, [listParam] + param)
+        typeParam = [] #! dạng mảng không cần name truyền agrc vào FuncZcode
+        """
+            # TODO kiểm tra ast.param trong hàm trong listParam giống phần vardecl
+                #^ cập nhật listParam (giống prama) và typeParam (chỉ gồm các type)
+                #^ typeParam = [numberType, stringType, ...], listParam dạng DICT giống param
+            
+            ví dụ 1 -> đúng 
+            func foo(number a, string b) return  
+            -> typeParam = [numberType, stringType], listParam = {'a' : VarZcode(numberType), 'b' : VarZcode(stringType}         
+            
+            ví dụ 2 -> Redeclared
+            func foo(number a, string a) return
+        """ 
+        #TODO implement
+        
+        
+        """
+            # TODO kiểm tra self.function = method hàm hiện tại chuẩn bị vào body nó xử lí
+                #^ TH1 : method khai báo 1 phần
+                    #todo : cập nhật trong self.listFunction
+            func foo()
+            
+                #^ TH2 : method đã khai bó 1 phần trước đó
+                    #todo 1 : kiểm trả list param có giống nhau không không nếu không trả về Redeclared(Function(), ast.name.name)
+                    #todo 2 : cập nhật self.listFunction[].body, self.Return, self.function và self.visit(ast.body, [listParam] + param) 
+                    #todo 3 : sau khi gọi hàm kiểm tra self.Return có trong hàm hay không nếu không thì xác định typ nó VoidType, rồi xem xét với typ của hàm, nếu hàm cũng voidtype thì đúng nếu không thì lỗi  raise TypeMismatchInStatement(Return(None))
+            func foo() 
+            func foo() begin
+            end
+            
+                #^ TH3 : method khai báo đầu đủ lần đầu không có khai báo 1 phần
+                    #todo 1 : cập nhật self.listFunction[].body, self.Return, self.function, self.listFunction
+                    #todo 2 : giống todo 3 trên
+            func foo() begin 
+            end
+            
+                #^ ví dụ todo 3 của TH2
+            #! xác định kiểu
+            func foo() begin 
+            end     
+            -> type foo là VoidType  
+            
+            #! xác định kiểu
+            func foo()
+            number a <- foo() -> foo() có typ là number
+            func foo() begin  -> này lại có typ là void nên lỗi raise TypeMismatchInStatement(Return(None))
+            end     
+        
+        """
+        self.Return = False
+        if ast.body is None:
+            #todo: implement TH1
+
+        if method:
+            #todo: implement TH2
 
         else:
-            
-            self.listFunction[0][ast.name.name] = FuncZcode(typeParam, None, body)
-            
+            #todo: implement TH3
 
-        if ast.body:
-
-            self.function = self.listFunction[0][ast.name.name]
-            self.visit(ast.body, [listParam] + param)
-            self.function = None
-
-
-            if not self.Return:
-
-                #! nếu không có type khi duyệt qua body thì là voidtype
-                if self.listFunction[0][ast.name.name].typ is None:
-                    self.listFunction[0][ast.name.name].typ = VoidType()
-
-                #! type đã có so sánh nó với VoidType
-                elif not self.comparType(self.listFunction[0][ast.name.name].typ, VoidType()): 
-                    raise TypeMismatchInStatement(Return(None))
-
-
-        return self.listFunction
+        
+  
+        
 
     def visitId(self, ast, param):
-        #TODO kiểm tra xem name có trong toàn bộ param nén lỗi Undeclared
-        for scope in param:
-            id = scope.get(ast.name)
-            if id:
-                if isinstance(id, FuncZcode): raise Undeclared(Identifier(), ast.name)
-                if not id.typ: return id
-                else: return id.typ
-        
-        raise Undeclared(Identifier(), ast.name)
+        """
+            # TODO kiểm tra xem name có trong toàn bộ param nén lỗi Undeclared
+                #^ đối với giá trị trả về nếu Id.typ = None thì trả về chính nó luôn varZcode, nếu cso Id.typ thì trả về typ của nó
+            VD 1:
+            number b <- a -> Undeclared(Identifier(), 'a') 
+            
+            VD 2:
+            number a
+            number b <- a -> a đã có VarZcode.typ nên return VarZcode.typ
 
-    def visitCallStmt(self, ast, param):
-        #TODO kiểm tra xem name có trong toàn bộ listFunction nén lỗi Undeclared
-        found = self.listFunction[0].get(ast.name.name)
-        
-        # Cannot find the function declaration
-        if not found:  
-            raise Undeclared(Function(), ast.name.name)
-        
-        listLHS = found.param
-        listRHS = ast.args
-
-        # Check param and args
-        if len(listLHS) != len(listRHS):
-            raise TypeMismatchInStatement(ast)
-        
-        for i in range(len(listLHS)):
-
-            LHS = self.visit(listLHS[i], param)
-            RHS = self.visit(listRHS[i], param)
-
-            if isinstance(RHS, Zcode):
-                RHS.typ = LHS
-            elif not self.comparType(LHS, RHS):
-                raise TypeMismatchInStatement(ast)
-
-        # Check return type
-        function_found = found
-        if function_found.typ is None: function_found.typ = VoidType()
-        elif not self.comparType(function_found.typ, VoidType()):
-            raise TypeMismatchInStatement(ast)
-
-        return function_found.typ
+            VD 3:
+            var a
+            number b <- a -> a có VarZcode.typ = None nên return VarZcode              
+        """
+        #TODO implement
 
     def visitCallExpr(self, ast, param):
-        #TODO kiểm tra xem name có trong toàn bộ listFunction nén lỗi Undeclared
-        found = self.listFunction[0].get(ast.name.name)
-        
-        # Cannot find the function declaration
-        if not found:  
-            raise Undeclared(Function(), ast.name.name)
-        
-        listLHS = found.param
-        listRHS = ast.args
+        """
+            TODO kiểm tra xem name có trong toàn bộ param nén lỗi Undeclared
+            VD 1: đúng 
+            func foo()
+            func main()begin
+                var a <- foo()
+            end
+            
+            VD 2: Undeclared
+            func foo()
+            func main()begin
+                var a <- foo1()
+            end
+            
+            VD 3: Undeclared
+            func foo()
+            func main()begin
+                var foo <- 1
+                var a <- foo()
+            end
+        """   
+        """
+            TODO giống phần kiểm tra TypeMismatchInExpression xử lí ast.varInit nếu tồn tại
+            ^ xét listLHS (là method.param) và listRHS (là ast.args)
+                ^ nếu len khác nhau TypeMismatchInExpression
+                ^ nếu self.comparType(LHS[i], RHS[i]) -> TypeMismatchInExpression
+            ^ nếu FuncZcode.typ is None thì return FuncZcode
+            ^ nếu comparType(FuncZcode.typ, VoidType()) -> TypeMismatchInExpression
+            ^ còn lại return FuncZcode.typ (giống phần VarZcode)
+        """   
 
-        # Check param and args
-        if len(listLHS) != len(listRHS):
+        method = self.listFunction.get(ast.name.name)
+        
+        #TODO implement
+
+    def visitCallStmt(self, ast, param):
+        """như CallExpr chỉ khác ở chỗ not comparType(FuncZcode.typ, VoidType()) -> TypeMismatchInStatement"""
+        method = self.listFunction.get(ast.name.name)
+        #TODO implement
+
+    def visitIf(self, ast, param):
+        """_typExpr_
+            # TODO giống phần kiểm tra TypeMismatchInStatement theo nguyên lí LHS và RHS
+                #^ xét typExpr và self.visit(ast.thenStmt, [{}] + param)
+            ^ LHS = BoolType(), RHS = self.visit(ast.expr, param)
+        """   
+        #TODO implement 
+        
+        """_elifStmt_
+            #TODO giống trên, LHS = BoolType()
+        """   
+        #TODO implement
+        
+        """_elseStmt_
+        """            
+        if ast.elseStmt is not None:
+            self.visit(ast.elseStmt, [{}] + param)
+        
+    def visitFor(self, ast, param):
+        """_typID_
+            #TODO giống mấy thằng trong if, LHS = NumberType()
+        """        
+        #TODO implement
+        
+        """_typCondExpr_
+            #TODO giống mấy thằng trong if, LHS = BoolType()
+        """    
+        #TODO implement
+
+        """_typUpdExpr_
+            #TODO giống mấy thằng trong if, LHS = NumberType()
+        """            
+        #TODO implement       
+        
+        
+        self.BlockFor += 1 #! vào trong vòng for nào anh em
+        self.visit(ast.body, [{}] + param) #! tạo ra tầm vực mới
+        self.BlockFor -= 1 #! cút khỏi vòng for nào anh em
+    
+    def visitReturn(self, ast, param):
+        """
+            # TODO kiểm tra TypeCannotBeInferred và TypeMismatchInStatement nguyên lí LHS và RHS
+                #^ LHS là self.function.typ if self.function.typ else self.function
+                #^ RHS là self.visit(ast.expr, param) if ast.expr else VoidType()
+        """
+        self.Return = True
+        LHS = self.function.typ if self.function.typ else self.function
+        RHS = self.visit(ast.expr, param) if ast.expr else VoidType()
+
+        #TODO implement   
+
+    def visitAssign(self, ast, param):
+        """
+            # TODO kiểm tra TypeCannotBeInferred và TypeMismatchInStatement nguyên lí LHS và RHS
+        """
+        LHS = self.visit(ast.lhs, param)
+        RHS = self.visit(ast.rhs, param)
+
+        #TODO implement
+            
+    def visitBinaryOp(self, ast, param):
+        #! vì các Association đều là left nên tiến hành ở left rồi tiếp theo right, thầy mà cho có Association right thì trúng bẫy hết
+        op = ast.op
+        """_left_ 
+            # TODO kiểm tra TypeCannotBeInferred và TypeMismatchInExpression nguyên lí LHS và RHS
+            #! op in ['+', '-', '*', '/', '%']
+                #^ LHS = NumberType(), left = self.visit(ast.left, param)
+            #! op in ['=', '!=', '<', '>', '>=', '<=']
+                #^ LHS = NumberType(), left = self.visit(ast.left, param)
+            #! op in ['and', 'or']
+                #^ LHS = boolType(), left = self.visit(ast.left, param)
+            #! op in ['==']
+                #^ LHS = StringType(), left = self.visit(ast.left, param)           
+            #! op in ['...']
+                #^ LHS = StringType(), left = self.visit(ast.left, param)  
+        """        
+        
+        left = self.visit(ast.left, param)
+        #TODO implement
+
+        """_right_             
+        """        
+        right = self.visit(ast.right, param)
+        #TODO implement
+
+    def visitUnaryOp(self, ast, param):
+        """
+            TODO giống phần kiểm tra TypeMismatchInExpression xử lí giống BinaryOp
+            ^ '+', '-' -> kiểu numbertype -> return Numbertype
+            ^ ['not'] -> kiểu booltype -> return booltype
+        """       
+        right = self.visit(ast.operand, param)
+        op = ast.op
+        #TODO implement       
+            
+
+    def visitArrayCell(self, ast, param):
+        """
+            TODO kiểm tra TypeMismatchInExpression
+            ^ Phần type ast.arr phải là array type nếu không lỗi TypeMismatchInExpression
+        """ 
+        left = self.visit(ast.arr, param)
+        if type(left) is not ArrayType:
             raise TypeMismatchInExpression(ast)
         
-        for i in range(len(listLHS)):
+        """
+            # TODO kiểm tra TypeMismatchInExpression
+            ^ từng phần tử trong ast.idx với LHS = NumberType(), RHS = ....
+        """         
+        #TODO implement
 
-            LHS = self.visit(listLHS[i], param)
-            RHS = self.visit(listRHS[i], param)
+       
+        """
+            # TODO kiểm tra TypeMismatchInExpression kiểm tra len(left.size) và len(ast.idx) 
+            ^ len(left.size) < len(ast.idx) -> trả về lỗi TypeMismatchInExpression ví dụ
+            number a[1,2]
+            var c <- a[1,2,3]
+            ^ len(left.size) = len(ast.idx) -> trả về type eleType không phải là arraytype
+            number a[1,2]
+            var c <- a[1,2] -> c : numbertype
+            ^ len(left.size) > len(ast.idx) -> trả về arraytype cắt đi đoạn ban đầu
+            number a[1,2,3]
+            var c <- a[1] -> c : number c[2,3]                   
+        """ 
+        #TODO implement
 
-            if isinstance(RHS, Zcode):
-                RHS.typ = LHS
-            elif not self.comparType(LHS, RHS):
-                raise TypeMismatchInExpression(ast)
+    def visitArrayLiteral(self, ast, param):
+        #* bước 1 chọn được type đã xác định kiểm trong ast.value (typ không phải là Zcode và ArrayZcode)
+        typ = None
+        for item in ast.value:
+            checkTyp = self.visit(item, param)
+            if not (isinstance(checkTyp, Zcode) or isinstance(checkTyp, ArrayZcode)):
+                typ = checkTyp
+                break
+        
+        #* Bước 2: xét kiểu từng phần tử
+        #^ TH1 : typ is None nghĩa là trong array chỉ gồm Zcode và ArrayZcode nên return ArrayZcode
+        #^ TH2 : typ in [StringType, BoolType, NumberType] duyệt qua ast.value nếu typ từng phần tử có ArrayZcode hay là comparType bị khác thì nén TypeMismatchInExpression
+        """_VD_
+            [1, "2"] -> lỗi TypeMismatchInExpression vì khác type trong array
+            dymaic x
+            [1, [x,x]] -> lỗi TypeMismatchInExpression
+            [1, x] -> x = numbertype
+        """
+        #^ TH3 : typ in arraytype duyệt qua ast.value giống TH2 nhưng nếu ArrayType yêu cầu dùng setTypeArray để chỉnh typ 
+        #^ bước 2 và 3 trả về arraytype
+        if typ is None:
+            #TODO implement
+        elif type(typ) in [StringType, BoolType, NumberType]:
+            #TODO implement
+        else:
+            #TODO implement
+            
+   
 
-        # Check return type
-        function_found = found
-        if function_found.typ is None: return function_found
-        if self.comparType(function_found.typ, VoidType()):
-            raise TypeMismatchInExpression(ast)
-
-        return function_found.typ
 
 
+
+
+
+
+    """phần này sẽ là cố định do ngắn quá :(( """
     def visitBlock(self, ast, param):
         for item in ast.stmt:
             #! trường hợp gặp block
             if type(item) is Block: self.visit(item, [{}] + param)
-            else: self.visit(item, param)
-
-
-    def visitFor(self, ast, param):
-
-        #TODO Check type
-        listLHS = [NumberType(), BoolType(), NumberType()]
-        listRHS = [
-            self.visit(ast.name, param), 
-            self.visit(ast.condExpr, param),
-            self.visit(ast.updExpr, param)
-        ]
-        
-        for i in range(3):
-
-            LHS = listLHS[i]
-            RHS = listRHS[i]
-
-            if isinstance(RHS, Zcode):
-                RHS.typ = LHS
-            elif not self.comparType(LHS, RHS):
-                raise TypeMismatchInStatement(ast)
-
-
-        self.BlockFor += 1 #! vào trong vòng for nào anh em
-        self.visit(ast.body, [{}] + param)
-        self.BlockFor -= 1 #! cút khỏi vòng for nào anh em
-        
+            else: self.visit(item, param)           
     def visitContinue(self, ast, param):
         #! kiểm tra đang ở vòng for hay không
         if self.BlockFor == 0: raise MustInLoop(ast)
-
     def visitBreak(self, ast, param):
         #! kiểm tra đang ở vòng for hay không
-        if self.BlockFor == 0: raise MustInLoop(ast)
-
-
+        if self.BlockFor == 0: raise MustInLoop(ast)   
     def visitNumberType(self, ast, param): return ast
     def visitBoolType(self, ast, param): return ast
     def visitStringType(self, ast, param): return ast
@@ -282,185 +544,9 @@ class StaticChecker(BaseVisitor, Utils):
     def visitNumberLiteral(self, ast, param): return NumberType()
     def visitBooleanLiteral(self, ast, param): return BoolType()
     def visitStringLiteral(self, ast, param): return StringType()
-    def visitArrayLiteral(self, ast, param):
-
-        for lit in ast.value: self.visit(lit, param)
-        typ = self.visit(ast.value[0], param)
-
-        if type(typ) in [StringType, BoolType, NumberType]:
-            return ArrayType([len(ast.value)], typ)
-        return ArrayType([len(ast.value)] + typ.size, typ.eleType)
-
-    def visitBinaryOp(self, ast, param):
-        LHS = self.visit(ast.left, param)
-        RHS = self.visit(ast.right, param)
-
-        type_0 = ['+', '-', '*', '/', '%']
-        type_1 = ['=', '!=', '<', '>', '>=', '<=']
-        type_2 = ['and', 'or']
-        type_3 = ['==']
-        type_4 = ['...']
-
-        def checkTypeHelper(input_type, output_type):
-
-            if not isinstance(LHS, Zcode) and not isinstance(RHS, Zcode):
-                if not self.comparType(LHS, RHS):
-                    raise TypeMismatchInExpression(ast)
-                if not self.comparType(LHS, input_type) or not self.comparType(RHS, input_type):
-                    raise TypeMismatchInExpression(ast)
-                
-            elif not isinstance(LHS, Zcode) and isinstance(RHS, Zcode):
-                RHS.typ = LHS
-
-                if not self.comparType(LHS, input_type):
-                    raise TypeMismatchInExpression(ast)
-                
-            elif isinstance(LHS, Zcode) and not isinstance(RHS, Zcode):
-                LHS.typ = RHS
-
-                if not self.comparType(RHS, input_type):
-                    raise TypeMismatchInExpression(ast)
-                
-            else:
-                LHS.typ = input_type
-                RHS.typ = input_type
-
-            return output_type
-        
-        if ast.op in type_0:
-            return checkTypeHelper(NumberType(), NumberType())
-        elif ast.op in type_1:
-            return checkTypeHelper(NumberType(), BoolType())
-        elif ast.op in type_2:
-            return checkTypeHelper(BoolType(), BoolType()) 
-        elif ast.op in type_3:
-            return checkTypeHelper(StringType(), BoolType())
-        elif ast.op in type_4:
-            return checkTypeHelper(StringType(), StringType())
-        
-        return Zcode()
-
-    def visitUnaryOp(self, ast, param):
-        
-        operand = self.visit(ast.operand, param)
-
-        type_0 = ['+', '-']
-        type_1 = ['not']
-
-        def checkTypeHelper(input_type, output_type):
-            
-            if isinstance(operand, Zcode):
-                operand.typ = input_type
-            elif not self.comparType(operand, input_type):
-                raise TypeMismatchInExpression(ast)
-
-            return output_type
-        
-        if ast.op in type_0:
-            return checkTypeHelper(NumberType(), NumberType())
-        elif ast.op in type_1:
-            return checkTypeHelper(BoolType(), BoolType()) 
-        
-        return Zcode()
-
-    def visitArrayCell(self, ast, param):
-        
-        arr = self.visit(ast.arr, param)
-        #TODO Không thể suy diễn kiểu từ ArrayType nên cần hỏi thầy !!!!
-        if not isinstance(arr, ArrayType):
-            raise TypeMismatchInExpression(ast)
-        
-        # Check idx
-        for index in ast.idx:
-            expr = self.visit(index, param)
-
-            if isinstance(expr, Zcode):
-                expr.typ = NumberType()
-            elif not self.comparType(expr, NumberType()):
-                raise TypeMismatchInExpression(ast)
-            
-        left = len(arr.size)
-        right = len(ast.idx)
-        if left < right:
-            raise TypeMismatchInExpression(ast)
-        elif left == right:
-            return arr.eleType
-        elif left > right:
-            return ArrayType(size=arr.size[right:], eleType=arr.eleType)
-
-    def visitIf(self, ast, param):
-        
-        # Check first condition
-        expr = self.visit(ast.expr, param)
-        if isinstance(expr, Zcode):
-            expr.typ = BoolType()
-        elif not self.comparType(expr, BoolType()):
-            raise TypeMismatchInStatement(ast)
-        
-        # visit thenStmt
-        self.visit(ast.thenStmt, [{}] + param)
-
-        # visit all elifStmt
-        for ele in ast.elifStmt:
-
-            # Check condition type
-            elif_expr = self.visit(ele[0], param)
-
-            if isinstance(elif_expr, Zcode):
-                elif_expr.typ = BoolType()
-            elif not self.comparType(elif_expr, BoolType()):
-                raise TypeMismatchInStatement(ast)
-            
-            # visit stmt of elif
-            self.visit(ele[1], [{}] + param)
-        
-        # Visit elseStmt
-        if ast.elseStmt:
-            self.visit(ast.elseStmt, [{}] + param)
-        
-        return
 
         
-
-    def visitAssign(self, ast, param):
         
-        LHS = self.visit(ast.lhs, param)
-        RHS = self.visit(ast.rhs, param)
-
-        # TH1 : cả 2 đều trả về Zcode -> TypeCannotBeInferred
-        if isinstance(LHS, Zcode) and isinstance(RHS, Zcode):
-            raise TypeCannotBeInferred(stmt=ast)
-        # TH2, 3: nếu 1 trong 2 bên trả về Zcode bên kia xác định type thì gán type của Zcode với type đó
-        elif not isinstance(LHS, Zcode) and isinstance(RHS, Zcode):
-            RHS.typ = LHS
-        elif isinstance(LHS, Zcode) and not isinstance(RHS, Zcode):
-            LHS.typ = RHS
-        # TH4 : cả 2 đều có type nên kiểm tra xem 2 type có giống nhau không
-        elif not self.comparType(LHS, RHS):
-            raise TypeMismatchInStatement(stmt=ast)
-
-    def visitReturn(self, ast, param):
-
-        self.Return = True
-        
-        LHS = None
-        if self.function.typ:
-            LHS = self.visit(self.function.typ, param) if not self.comparType(self.function.typ, VoidType()) else self.function.typ
-        else: LHS = self.function
-
-        RHS = self.visit(ast.expr, param) if ast.expr else VoidType()
-
-        # TH1 : cả 2 đều trả về Zcode -> TypeCannotBeInferred
-        if isinstance(LHS, Zcode) and isinstance(RHS, Zcode):
-            raise TypeCannotBeInferred(stmt=ast)
-        # TH2, 3: nếu 1 trong 2 bên trả về Zcode bên kia xác định type thì gán type của Zcode với type đó
-        elif not isinstance(LHS, Zcode) and isinstance(RHS, Zcode):
-            RHS.typ = LHS
-        elif isinstance(LHS, Zcode) and not isinstance(RHS, Zcode):
-            LHS.typ = RHS
-        # TH4 : cả 2 đều có type nên kiểm tra xem 2 type có giống nhau không
-        elif not self.comparType(LHS, RHS):
-            raise TypeMismatchInStatement(stmt=ast)
 
 
 

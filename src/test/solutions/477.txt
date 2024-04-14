@@ -1,1 +1,1 @@
-Type Mismatch In Statement: Return()
+Type Mismatch In Expression: BinaryOp(..., BinaryOp(>, Id(VoTien), Id(VoTien)), BinaryOp(<, Id(VoTien), Id(VoTien)))

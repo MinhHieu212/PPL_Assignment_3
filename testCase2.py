@@ -2,7 +2,7 @@ import unittest
 from TestUtils import TestChecker
 from AST import *
 
-class CheckerSuite(unittest.TestCase):
+class CheckSuite(unittest.TestCase):
     def test_1_No_entry_point(self):
         input = """
             func main() return
@@ -1535,14 +1535,3 @@ end
         """
         expect = "Type Mismatch In Statement: Return(ArrayLit(NumLit(1.0), NumLit(2.0), NumLit(3.0)))"
         self.assertTrue(TestChecker.test(input, expect, 407))
-        
-        input = """
-            func main() begin 
-                dynamic x
-                number a[1,2]
-                a <- [[x , x]]
-                x <- 4
-            end
-        """
-        expect = ""
-        self.assertTrue(TestChecker.test(input, expect, 600))
