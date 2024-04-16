@@ -3,6 +3,6 @@
                 dynamic x
                 number a[1,2]
                 a <- [[x , x]]
-                x <- [4]
+                x <- 4
             end
         

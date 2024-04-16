@@ -1,0 +1,7 @@
+
+            dynamic abc
+            number a <- abc
+            number b <- abc
+
+            func main() return
+        

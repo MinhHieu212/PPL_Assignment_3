@@ -1,0 +1,8 @@
+
+            func abc()
+            func main() begin
+                number abc_ <- abc()
+            end
+            func abc() begin
+            end
+        

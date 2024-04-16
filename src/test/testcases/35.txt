@@ -1,0 +1,6 @@
+
+            dynamic abc
+            var a <- abc
+
+            func main() return
+        

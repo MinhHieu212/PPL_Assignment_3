@@ -874,7 +874,7 @@ class CheckSuite(unittest.TestCase):
 func isPrime(number x)
 func main()
 begin
-number x <- readNumber()
+number x <- readNumber())
 if (isPrime(x)) writeString("Yes")
 else writeString("No")
 end
@@ -903,7 +903,7 @@ end
             func main() return main()
         """
         expect = "Type Cannot Be Inferred: Return(CallExpr(Id(main), []))"
-        self.assertTrue(TestChecker.test(input, expect, 499))
+        self.assertTrue(TestChecker.test(input, expect, 499)
             
     def test_arraylit(self):
         

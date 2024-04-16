@@ -1,0 +1,5 @@
+
+            dynamic abc
+            var x <- abc + abc * abc
+            number y <- abc
+        

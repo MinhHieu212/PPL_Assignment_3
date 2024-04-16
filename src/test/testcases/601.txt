@@ -1,0 +1,9 @@
+
+            func main() 
+            begin
+            end
+            func aaa(number a , bool b) 
+            begin 
+                number b
+            end    
+        

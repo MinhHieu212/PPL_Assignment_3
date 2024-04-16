@@ -1,0 +1,4 @@
+
+            dynamic abc
+            var x <- abc > abc ... abc < abc
+        

@@ -1,3 +1,7 @@
+
+#  Student's name: Trần Minh Hiếu
+#  Student ID: 2113363
+
 from AST import *
 from Visitor import *
 from Utils import Utils
@@ -71,10 +75,7 @@ class StaticChecker(BaseVisitor, Utils):
                 return False
             
         return True
-
     
-    
-        
     
     # decl: List[Decl]  
     def visitProgram(self, ast, param): 
@@ -163,7 +164,8 @@ class StaticChecker(BaseVisitor, Utils):
         
         if ast.body: 
             self.function = self.listFunction[0].get(ast.name.name)
-            self.visit(ast.body , listParam + param)
+            self.visit(ast.body ,  listParam + param)
+            # self.visit(ast.body , [{}] + listParam + param)
             self.function = None
 
             if not self.Return:
@@ -224,6 +226,7 @@ class StaticChecker(BaseVisitor, Utils):
     def visitBreak(self, ast, param):
         if self.BlockFor == 0: 
             raise MustInLoop(ast)    
+     
      
     # class BinaryOp(Expr):op: str, left: Expr, right: Expr
     def visitBinaryOp(self, ast, param):
@@ -339,27 +342,6 @@ class StaticChecker(BaseVisitor, Utils):
         if ast.elseStmt: 
             self.visit(ast.elseStmt , [{}] + param)
         
-
-    # class Assign(Stmt): lhs: Expr , exp: Expr
-    def visitAssign(self, ast, param):
-        leftTyp = self.visit(ast.lhs, param)
-        rightTyp = self.visit(ast.rhs, param)
-
-        if isinstance(leftTyp, Zcode) and isinstance(rightTyp, Zcode):
-            raise TypeCannotBeInferred(ast)
-        elif isinstance(leftTyp, Zcode):
-            leftTyp.typ = rightTyp
-        elif isinstance(rightTyp, Zcode):
-            rightTyp.typ = leftTyp
-        elif isinstance(leftTyp, ArrayType) and isinstance(rightTyp, ArrayZcode):
-            if not self.setTypeArray(leftTyp, rightTyp):
-                raise TypeMismatchInStatement(ast)
-        elif isinstance(leftTyp, ArrayZcode) and isinstance(rightTyp, ArrayType):
-            if not self.setTypeArray(rightTyp, leftTyp):
-                raise TypeMismatchInStatement(ast)
-        elif not self.comparType(leftTyp, rightTyp):
-            raise TypeMismatchInStatement(ast)
-
         
     def visitNumberType(self, ast, param): return NumberType()
     def visitBoolType(self, ast, param): return BoolType()
@@ -369,7 +351,6 @@ class StaticChecker(BaseVisitor, Utils):
     def visitBooleanLiteral(self, ast, param): return BoolType()
     def visitStringLiteral(self, ast, param): return StringType()
 
-    
     
     # typeArray : ArrayType , typeArrayZcode : ArrayZcode 
     # typeArray: ArrayType([4,2] , NumerType()) and ArrayZcode: [Zcode , VarZcode , FuncZcode , [Zcode , Zcode]] => OKE
@@ -398,10 +379,10 @@ class StaticChecker(BaseVisitor, Utils):
 
         return True
     
+    
     # class ArrayLiteral(Literal): value: List[Expr]
     # [[[Zcode, Zcode] , [Zcode , 1]] , [Zcode , [Zcode , Zcode]]] 
     # [[[Zcode, Zcode] , [Zcode , 1]] , [Zcode , [Zcode , "1"]]] 
-
     def visitArrayLiteral(self, ast, param):
         typ = None
         for item in ast.value:
@@ -572,3 +553,25 @@ class StaticChecker(BaseVisitor, Utils):
         
         return func.typ
         
+    # class Assign(Stmt): lhs: Expr , exp: Expr
+    def visitAssign(self, ast, param):
+        leftTyp = self.visit(ast.lhs, param)
+        rightTyp = self.visit(ast.rhs, param)
+
+        if isinstance(leftTyp, Zcode) and isinstance(rightTyp, Zcode):
+            raise TypeCannotBeInferred(ast)
+        
+        elif isinstance(leftTyp, Zcode):
+            leftTyp.typ = rightTyp
+        elif isinstance(rightTyp, Zcode):
+            rightTyp.typ = leftTyp
+        elif isinstance(leftTyp, ArrayType) and isinstance(rightTyp, ArrayZcode):
+            if not self.setTypeArray(leftTyp, rightTyp):
+                raise TypeMismatchInStatement(ast) 
+            
+        elif isinstance(leftTyp, ArrayZcode) and isinstance(rightTyp, ArrayType):
+            if not self.setTypeArray(rightTyp, leftTyp):
+                raise TypeMismatchInStatement(ast)
+            
+        elif not self.comparType(leftTyp, rightTyp):
+            raise TypeMismatchInStatement(ast)
