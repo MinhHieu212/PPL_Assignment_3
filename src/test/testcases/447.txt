@@ -1,5 +1,8 @@
 
-            number a[1] <- [[1,2]]
+            func foo() return
 
-            func main() return
+            func main()begin
+                foo()
+                foo(1)
+            end
         

@@ -2,6 +2,8 @@
             func foo(number a) return
 
             func main()begin
-                foo("1")
+                dynamic a
+                foo(a)
+                number c <- a
             end
         

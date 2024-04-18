@@ -164,8 +164,8 @@ class StaticChecker(BaseVisitor, Utils):
         
         if ast.body: 
             self.function = self.listFunction[0].get(ast.name.name)
-            self.visit(ast.body ,  listParam + param)
-            # self.visit(ast.body , [{}] + listParam + param)
+            # self.visit(ast.body ,  listParam + param)
+            self.visit(ast.body , [{}] + listParam + param)
             self.function = None
 
             if not self.Return:

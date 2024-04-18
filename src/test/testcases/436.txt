@@ -1,7 +1,7 @@
 
-            number VoTien
-            var a <- VoTien
-            number b <- a
+            dynamic VoTien
+            number a <- VoTien
+            number b <- VoTien
 
             func main() return
         

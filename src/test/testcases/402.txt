@@ -1,6 +1,4 @@
 
-            func main()
-            func main() begin
-                number main
+            func main(number a) begin
             end
         

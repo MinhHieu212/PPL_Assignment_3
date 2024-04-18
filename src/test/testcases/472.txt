@@ -2,7 +2,6 @@
             func main() begin
                 number a[1,2]
                 dynamic b
-                var c <- a[b, 1]
-                b <- 1
+                var c <- a["1"]
             end
         

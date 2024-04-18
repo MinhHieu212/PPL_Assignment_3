@@ -1,4 +1,4 @@
 
             dynamic VoTien
-            var x <- VoTien > VoTien ... VoTien < VoTien
+            var x <- VoTien and (VoTien > VoTien)
         

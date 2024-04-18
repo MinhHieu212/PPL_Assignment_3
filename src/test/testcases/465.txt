@@ -1,7 +1,10 @@
 
-            func foo(number a) return
-            
             func main() begin
-                var a <- foo("1")
+                dynamic left
+                dynamic right
+                
+                var c <- left + right
+                left <- 1
+                right <- 1
             end
         

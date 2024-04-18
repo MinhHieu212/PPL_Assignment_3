@@ -1,1 +1,1 @@
-No Function Definition: foo
+Redeclared Variable: a

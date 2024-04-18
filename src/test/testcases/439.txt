@@ -1,8 +1,8 @@
 
             func foo() begin
-                return 1
-                dynamic a
+                number a
                 return a
+                return 1
             end
 
             func main() return

@@ -1,8 +1,8 @@
 
-            func foo() begin
-                number a
-                a <- 1
-                a <- true
+            func foo() return 1
+
+            func main() begin
+                var a <- foo()
+                var b <- foo(1)
             end
-            func main() return
         

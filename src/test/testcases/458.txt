@@ -1,9 +1,9 @@
 
             func foo() begin
-                dynamic a 
-                dynamic b
-                dynamic c <- "1"
-                for a until b by c return
+                number a
+                return 1
+                return a
+                return "!"
             end
             func main() return
         

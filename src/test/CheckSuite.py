@@ -3,7 +3,7 @@ from TestUtils import TestChecker
 from AST import *
 
 class CheckerSuite(unittest.TestCase):
-    def test_No_entry_point(self):
+    def test_No_entry_point(self):        
         input = """
             func main() return
         """
@@ -186,7 +186,7 @@ class CheckerSuite(unittest.TestCase):
             
             func main() return
         """
-        expect = "Redeclared Variable: c"
+        expect = ""
         self.assertTrue(TestChecker.test(input, expect, 19))
         
         input = """
@@ -212,7 +212,7 @@ class CheckerSuite(unittest.TestCase):
             
             func main() return
         """
-        expect = "Redeclared Variable: a"
+        expect = ""
         self.assertTrue(TestChecker.test(input, expect, 21))
         
         input = """

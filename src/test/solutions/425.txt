@@ -1,1 +1,1 @@
-Redeclared Function: foo
+Undeclared Identifier: e

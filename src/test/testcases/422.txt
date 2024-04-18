@@ -1,12 +1,6 @@
 
-            number a
-            func abc(number a, number abc, number c)
-            begin
-                begin
-                    number a
-                end
-                number a
-            end
+            func foo(number a) 
+            func foo(string a) return
             
             func main() return
         

@@ -1,6 +1,8 @@
 
-            number foo
-            func foo() return
-            
-            func main() return
+            number a
+            func VoTien() return
+            func main()begin
+                number a
+                string a
+            end
         

@@ -1,7 +1,7 @@
 
             func foo() begin
-                dynamic a <- true
-                dynamic b
+                dynamic a 
+                dynamic b <- 2
                 dynamic c
                 for a until b by c return
             end

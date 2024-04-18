@@ -1,11 +1,12 @@
 
-            func main()begin
+            func foo() begin
                 dynamic a
-                if (a) number a
-                elif (a)  return
-                else number a
-                
-                if(true) number a
-                elif (1) number a
+                dynamic b
+                dynamic c
+                for a until b by c return
+                a <- 1
+                b <- true
+                c <- 1
             end
+            func main() return
         

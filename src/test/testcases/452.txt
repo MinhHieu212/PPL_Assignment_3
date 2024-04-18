@@ -1,7 +1,6 @@
 
             func main()begin
-                dynamic a
+                dynamic a <- 1
                 if (a) return
-                a <- true
             end
         

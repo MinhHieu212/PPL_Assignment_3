@@ -1,3 +1,8 @@
 
-            func main() return main()
+            dynamic x
+            number a[1,1,2,2] <- [[[x, x]]]
+            func  main()
+            begin
+                x <- [1,2]
+            end
         

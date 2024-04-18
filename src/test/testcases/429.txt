@@ -1,9 +1,7 @@
 
-            func a() begin
-                a()
-            end
+            func a() return
             func main() begin
+                number a
                 a()
-                b()
             end
         

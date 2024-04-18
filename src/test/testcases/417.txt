@@ -1,8 +1,12 @@
 
             number a
-            func abc() return
+            func VoTien() return
             func main()begin
                 number a
-                string a
+                begin
+                    number a
+                    string a
+                end
+                
             end
         

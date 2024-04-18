@@ -2,7 +2,7 @@
             func foo() begin
                 number a
                 dynamic b
-                a <- b
+                b <- a
                 b <- 1
             end
 

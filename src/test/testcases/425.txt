@@ -1,6 +1,7 @@
 
-            func foo(number a, string c) 
-            func foo(number a) return
-            
-            func main() return
+            number a <- a
+            func main() begin
+                number b <- a
+                number c <- e
+            end
         
