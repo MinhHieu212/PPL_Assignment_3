@@ -1,8 +1,10 @@
 
-            dynamic x
-            number a[3] <- [x, 1, "1"]
-            func  main()
-            begin
-                x <- 1
-            end
-        
+func test(number x)
+
+func main()
+begin
+    number test
+    begin
+        number x <- test(2018) + 1
+    end
+end

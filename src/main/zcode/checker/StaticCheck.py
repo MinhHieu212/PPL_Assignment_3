@@ -295,7 +295,11 @@ class StaticChecker(BaseVisitor, Utils):
     def visitArrayCell(self, ast, param):
         arrExpr = self.visit(ast.arr , param)
         
-        # chua suy dien kieu cho array type
+        # How to inffer for array Zcode -> ArrayType(? Dim , ? eleTyp)
+        # Duy nói nếu pt được type của eleType thì oke , không thì Type can not be inffer
+        # if isinstance(arrExpr , Zcode):
+        #     arrExpr.typ = ArrayType()  
+            
         if not isinstance(arrExpr , ArrayType):
             raise TypeMismatchInExpression(ast)
         
