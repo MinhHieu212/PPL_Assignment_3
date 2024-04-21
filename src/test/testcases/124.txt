@@ -1,2 +1,9 @@
- "Tien \2 \n 
- 
+
+            func foo(number a) return "1"
+            func main() 
+            begin
+                dynamic x
+                number a[1,1,1,1] <- [[[[x]]]]
+                x <- 1
+            end
+        

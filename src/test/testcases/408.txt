@@ -1,5 +1,6 @@
 
-            func foo(number a) 
-        
-            func main() return
+            dynamic a <- a
+            func main() begin 
+                
+            end
         

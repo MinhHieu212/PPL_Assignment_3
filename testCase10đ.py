@@ -2,7 +2,16 @@ import unittest
 from TestUtils import TestChecker
 from AST import *
 
-class CheckerSuite(unittest.TestCase):
+"""
+^name : Võ Tiến
+^FB : https://www.facebook.com/profile.php?id=100056605580171
+^GROUP: https://www.facebook.com/groups/211867931379013/
+^DAY : 15/4/2024
+"""
+
+class CheckSuite(unittest.TestCase):
+
+    
     def test_Votien_0(self):
         input = """
 func main()
@@ -25,7 +34,6 @@ end
             """
         expect = "Type Mismatch In Statement: VarDecl(Id(a), ArrayType([3.0, 2.0, 2.0], NumberType), None, ArrayLit(ArrayLit(ArrayLit(Id(x))), ArrayLit(ArrayLit(Id(x))), ArrayLit(ArrayLit(Id(x)))))"
         self.assertTrue(TestChecker.test(input, expect, 433))
-        
         input = """
     func main() begin
         dynamic x

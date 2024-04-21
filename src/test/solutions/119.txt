@@ -1,1 +1,1 @@
-Unclosed String: Vo \n 
+Type Mismatch In Expression: CallExpr(Id(foo), [ArrayLit(Id(x), Id(x))])

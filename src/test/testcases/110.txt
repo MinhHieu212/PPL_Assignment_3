@@ -1,1 +1,9 @@
-1.1/3
+
+            func main() 
+            begin
+                dynamic x
+                dynamic y
+                for x until true by x[1]
+                    return
+            end
+        

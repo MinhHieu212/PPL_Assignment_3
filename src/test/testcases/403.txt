@@ -1,4 +1,12 @@
 
-            func main(number a) begin
+            func main() begin 
+                number i
+                for i until true by 1
+                begin
+                    begin
+                        number i
+                    end
+                end
+                continue
             end
         

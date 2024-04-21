@@ -1,1 +1,8 @@
- "Vo ' \n \b 
+
+            func foo(number a) return "1"
+            func main() 
+            begin
+                dynamic x
+                var a <- x ... foo([x, x])
+            end
+        

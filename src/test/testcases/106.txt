@@ -1,1 +1,12 @@
-A _ a az AZ aZ _a a_ a1 _1 A1
+
+            number a
+            func foo(number a)
+            begin
+                number a
+                if (true) number b
+                
+                for b until true by 1
+                    number b
+            end
+            func main() return
+        

@@ -1,8 +1,8 @@
 
-            func foo(number a) return 1
+            func foo(number a) return "1"
             func main() 
             begin
                 dynamic x
-                number a <- 1 + foo([[x]])
+                var a <- foo([x, x]) ... x
             end
         

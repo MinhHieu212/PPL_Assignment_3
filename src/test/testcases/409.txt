@@ -1,6 +1,7 @@
 
-            func a()
-            number a
-            
-            func main() return
+            func main() begin 
+                begin
+                    dynamic a <- [[1], [2], [1+"a"]]
+                end
+            end
         

@@ -1,1 +1,1 @@
-No Function Definition: foo
+Type Cannot Be Inferred: VarDecl(Id(a), None, dynamic, Id(a))

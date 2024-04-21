@@ -1,3 +1,5 @@
 
-            func main() return
+            number a
+            func main() begin 
+            end
         

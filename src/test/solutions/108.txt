@@ -1,1 +1,1 @@
-11,Tienc,<EOF>
+Type Cannot Be Inferred: If((ArrayLit(Id(x)), AssignStmt(Id(x), NumLit(1.0))), [], None)

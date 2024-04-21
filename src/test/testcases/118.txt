@@ -1,1 +1,8 @@
- "Vo  
+
+            func foo(number a) return "1"
+            func main() 
+            begin
+                dynamic x
+                var a <- foo([x, x]) ... foo([x, x])
+            end
+        

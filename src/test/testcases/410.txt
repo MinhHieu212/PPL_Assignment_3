@@ -1,8 +1,10 @@
 
-            func a()
-            func a() return 1
             func main() begin 
-                a()
+                number a[1,2,3,4]
+                var c <- a[1]
+                number b[2,3,4]
+                c <- b
+                 number d[1,3,4]
+                 c <- d
             end
-             
         
