@@ -1,8 +1,9 @@
 
             func foo() begin
                 number a
-                a <- 1
-                a <- true
+                return 1
+                return a
+                return "!"
             end
             func main() return
         

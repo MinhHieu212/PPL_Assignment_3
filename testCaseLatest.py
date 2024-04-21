@@ -2,7 +2,10 @@ import unittest
 from TestUtils import TestChecker
 from AST import *
 
-class CheckerSuite(unittest.TestCase):    
+class CheckSuite(unittest.TestCase):
+    
+
+    
     def test_1_No_entry_point(self):
         input = """
             func main() return
@@ -762,6 +765,7 @@ class CheckerSuite(unittest.TestCase):
         expect = "Type Mismatch In Expression: ArrayCell(Id(b), [NumLit(1.0)])"
         self.assertTrue(TestChecker.test(input, expect, 470))
         
+        
         input = """
             func main() begin
                 number a[1,2]
@@ -971,6 +975,7 @@ end
         """
         expect = ""
         self.assertTrue(TestChecker.test(input, expect, 502))     
+        
 
         input = """
             dynamic x
@@ -1597,36 +1602,3 @@ end
         """
         expect = "Type Mismatch In Statement: Return(ArrayLit(NumLit(1.0), NumLit(2.0), NumLit(3.0)))"
         self.assertTrue(TestChecker.test(input, expect, 407))
-        
-#     def test_0(self):
-#         input = """
-#             dynamic x
-#             number a[2,2] <- [x,[x,x]]
-#             func main() return
-#         """    
-#         expect = "Type Mismatch In Expression: ArrayLit(Id(x), ArrayLit(Id(x), Id(x)))"
-#         self.assertTrue(TestChecker.test(input, expect, 900))
-
-#     def test_01(self):
-#         input = """
-#             dynamic x
-#             number a[2,2] <- [[x], [[x]]]
-#             func main() return
-#         """    
-#         expect = "Type Mismatch In Expression: ArrayLit(ArrayLit(Id(x)), ArrayLit(ArrayLit(Id(x))))"
-#         self.assertTrue(TestChecker.test(input, expect, 900))
-#         input = """
-
-# func foo(number a[2,2]) return  1
-        
-# func main()
-# begin
-#     dynamic x
-#     return foo([[x,x], [x,x]])
-    
-#     dynamic y
-#     return foo([[y,y], [y]])
-# end
-# """
-#         expect = "Type Mismatch In Expression: ArrayLit(ArrayLit(Id(y), Id(y)), ArrayLit(Id(y)))"
-#         self.assertTrue(TestChecker.test(input, expect, 500))

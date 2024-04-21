@@ -1,6 +1,5 @@
 
-            dynamic VoTien
-            var a <- VoTien
-
-            func main() return
+            func main() begin
+                continue
+            end
         

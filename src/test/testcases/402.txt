@@ -1,4 +1,6 @@
 
-            func main(number a) begin
+            func main()
+            func main() begin
+                number main
             end
         

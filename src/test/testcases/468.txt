@@ -3,7 +3,8 @@
                 dynamic left
                 dynamic right
                 
-                var c <- - left
+                var c <- 1 + right
                 left <- 1
+                right <- 1
             end
         

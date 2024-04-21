@@ -1,5 +1,5 @@
 
-            number a[1,2] <- [[1,2]]
+            number a <- "1"
 
             func main() return
         

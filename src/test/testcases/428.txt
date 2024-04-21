@@ -1,9 +1,11 @@
 
-            func a() begin
-                a()
-            end
+            func a() return 1
             func main() begin
-                a()
-                b()
+                number a
+                begin 
+                    number d
+                end
+                number b <- a
+                number c <- d
             end
         

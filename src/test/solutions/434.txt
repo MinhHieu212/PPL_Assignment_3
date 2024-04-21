@@ -1,1 +1,1 @@
-Type Cannot Be Inferred: VarDecl(Id(a), None, var, Id(VoTien))
+Continue Not In Loop

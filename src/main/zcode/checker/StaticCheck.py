@@ -1,4 +1,3 @@
-
 #  Student's name: Trần Minh Hiếu
 #  Student ID: 2113363
 
@@ -15,19 +14,30 @@ class Zcode: pass
 class VarZcode(Zcode):              # Using for VarDecl 
     def __init__(self, typ = None):
         self.typ = typ              # Type
-        
+    def __str__(self):
+        return f"VarZcode(type={self.typ})"   
+       
         
 class ArrayZcode(Type):             # Using for VarDecl in case ArrayType
     def __init__(self, eleType):
         self.eleType = eleType      # list[Type]
-        
+    def __str__(self):
+        return f"ArrayZcode(eleType=[{', '.join(str(i) for i in self.eleType)}])"    
+
 
 class FuncZcode(Zcode):             # Using for FuncDecl 
     def __init__(self, param = [], typ = None, body = False):
         self.param = param          # list[Type]
         self.typ = typ              # Type
         self.body = body            # Bool , using to check part declaration
-        
+    def __str__(self):
+        return f"FuncZcode(param=[{', '.join(str(i) for i in self.param)}],typ={str(self.typ)},body={self.body})"    
+
+
+class CannotBeInferredZcode(Type):
+    def __str__(self):
+        return "CannotBeInferredZcode()"
+
 
 class StaticChecker(BaseVisitor, Utils):
     def __init__(self,ast, ):
@@ -44,14 +54,87 @@ class StaticChecker(BaseVisitor, Utils):
                 "writeString" : FuncZcode([StringType()], VoidType(), True)
                 }]
        
-        
+       
+    def print(self):
+        print(f"BlockFor {self.BlockFor}")
+        print(f"function {str(self.function)}")
+        print(f"Return {self.Return}")
+        print(f"listFunction :")
+        for key, value in self.listFunction.items():
+            print(f"    {key}    {str(value)}") 
+       
+       
     def check(self):
         self.visit(self.ast, [{}])
         return None    
     
     
-    # LHS , RHS : Type ( String , Boolean , Number , ArrayType , Zcode[FuncZcode,VarZcode] , ArrayZcode )
-    def comparType(self, LHS, RHS): 
+    def LHS_RHS_stmt(self, LHS: Type, RHS: Type, ast):
+        # print(f"LHS_RHS_stmt {LHS} {RHS}")
+        if isinstance(LHS, CannotBeInferredZcode) or isinstance(RHS, CannotBeInferredZcode):
+            # print("111111111111 LHS_RHS_stmt 111111111111")
+            raise TypeCannotBeInferred(ast)
+
+        elif isinstance(LHS, Zcode) and isinstance(RHS, Zcode):
+            # print("2222222222 LHS_RHS_stmt 2222222222")
+            raise TypeCannotBeInferred(ast)
+
+        elif isinstance(LHS, Zcode) and isinstance(RHS, ArrayZcode):
+            # print("3333333333 LHS_RHS_stmt 3333333333")
+            raise TypeCannotBeInferred(ast)
+
+        elif isinstance(LHS, ArrayType) and isinstance(RHS, ArrayZcode):
+            if not self.setTypeArray(LHS, RHS):
+                # print("444444444444 LHS_RHS_stmt 444444444444")
+                raise TypeMismatchInStatement(ast)
+
+        elif isinstance(RHS, ArrayZcode):
+            # print("5555555555555555 LHS_RHS_stmt 5555555555555555")cl
+            raise TypeCannotBeInferred(ast)
+
+        elif isinstance(LHS, Zcode):
+            LHS.typ = RHS
+
+        elif isinstance(RHS, Zcode):
+            RHS.typ = LHS
+            
+        elif not self.comparType(LHS.typ if isinstance(LHS, Zcode) and LHS.typ else LHS , RHS.typ if isinstance(RHS, Zcode) and RHS.typ else RHS):
+            # print("77777777777777 LHS_RHS_stmt 77777777777777")
+            raise TypeMismatchInStatement(ast)
+
+      
+    def LHS_RHS_expr(self, LHS : Type, RHS : Type,ast) -> bool:
+        # print(f"LHS_RHS_expr {LHS} {RHS}")
+        if isinstance(LHS, CannotBeInferredZcode) or isinstance(RHS, CannotBeInferredZcode):
+            return True
+        
+        elif isinstance(LHS, Zcode) and isinstance(RHS, Zcode):
+            return True
+        
+        elif isinstance(LHS, Zcode) and isinstance(RHS, ArrayZcode):
+            return True
+        
+        elif isinstance(LHS, ArrayType) and isinstance(RHS, ArrayZcode):
+            if not self.setTypeArray(LHS, RHS):
+                raise TypeMismatchInExpression(ast)
+        
+        elif isinstance(RHS, ArrayZcode):
+            return True
+        
+        elif isinstance(LHS, Zcode):
+            LHS.typ = RHS 
+            
+        elif isinstance(RHS, Zcode):
+            RHS.typ = LHS
+        
+        elif not self.comparType(LHS.typ if isinstance(LHS, Zcode) and LHS.typ else LHS , RHS.typ if isinstance(RHS, Zcode) and RHS.typ else RHS):
+            raise TypeMismatchInExpression(ast)
+        
+        return False
+    
+    
+    # LHS , RHS : Type ( String , Boolean , Number , ArrayType , Zcode[FuncZcode,VarZcode] , ArrayZcode)
+    def comparType(self, LHS, RHS):
         if (type(LHS) is ArrayType) and (type(RHS) is ArrayType):
             if type(LHS.eleType) != type(RHS.eleType) or (len(LHS.size) != len(RHS.size)):
                 return False
@@ -97,35 +180,11 @@ class StaticChecker(BaseVisitor, Utils):
             raise Redeclared(Variable(), ast.name.name)
 
         param[0][ast.name.name] = VarZcode(ast.varType)
-
+   
         if ast.varInit:
-            left = param[0].get(ast.name.name).typ if ast.varType else param[0].get(ast.name.name)
-            right = self.visit(ast.varInit, param)
-
-            if isinstance(left, Zcode) and isinstance(right, Zcode):
-                raise TypeCannotBeInferred(ast)
-
-            elif isinstance(left, Zcode) and isinstance(right, ArrayZcode):
-                raise TypeCannotBeInferred(ast)
-
-            elif isinstance(right, ArrayZcode):
-                if isinstance(left, (StringType, BoolType, NumberType)):
-                    raise TypeMismatchInStatement(ast)
-                
-                elif not self.setTypeArray(left, right):
-                    raise TypeMismatchInStatement(ast)
-
-            elif isinstance(left, Zcode):
-                left.typ = right
-
-            elif isinstance(right, Zcode):
-                right.typ = left
-
-            else:
-                if not self.comparType(left, right):
-                    raise TypeMismatchInStatement(ast)
-
-        return param
+            LHS = param[0][ast.name.name].typ if param[0][ast.name.name].typ else param[0][ast.name.name]
+            RHS = self.visit(ast.varInit, param)
+            self.LHS_RHS_stmt(LHS, RHS, ast)
 
 
     def verifyParamDeclaration(self, ast, param):
@@ -208,10 +267,9 @@ class StaticChecker(BaseVisitor, Utils):
         forEleTyp = [self.visit(ast.name , param) , self.visit(ast.condExpr , param) , self.visit(ast.updExpr , param)]
 
         for i in range(0, 3):
-            if isinstance(forEleTyp[i] , Zcode):
-                forEleTyp[i].typ = BoolType() if i == 1 else NumberType()
-            elif not self.comparType(forEleTyp[i], BoolType() if i == 1 else NumberType()):
-                raise TypeMismatchInStatement(ast)
+            LHS = forEleTyp[i]
+            RHS  = BoolType() if i == 1 else NumberType()
+            self.LHS_RHS_stmt(LHS, RHS, ast)
             
         self.BlockFor += 1 
         self.visit(ast.body, [{}] + param)
@@ -230,85 +288,107 @@ class StaticChecker(BaseVisitor, Utils):
      
     # class BinaryOp(Expr):op: str, left: Expr, right: Expr
     def visitBinaryOp(self, ast, param):
- 
-        left_type = self.visit(ast.left, param)
-        right_type = self.visit(ast.right, param)
-        
-        def check_types(expected_type):
-            if isinstance(left_type, Zcode): 
-                left_type.typ = expected_type
-            if isinstance(right_type, Zcode):
-                right_type.typ = expected_type
-                
-            left_type_cmp = self.comparType(self.visit(ast.left, param) , expected_type)
-            right_type_cmp = self.comparType(self.visit(ast.right, param) , expected_type)
-            
-            if not left_type_cmp or not right_type_cmp:
-                raise TypeMismatchInExpression(ast)
+        op = ast.op
+        left = self.visit(ast.left, param)
        
-        if ast.op in ['+', '-', '*', '/', '%']:
-            check_types(NumberType())
-            return NumberType()        
-       
-        elif ast.op in ['=', '!=', '<', '>', '>=', '<=']:
-            check_types(NumberType())
+        if op in ['+', '-', '*', '/', '%']:
+            LHS = NumberType()
+            RHS = left  
+            cannotBeInferred = self.LHS_RHS_expr(LHS, RHS, ast)
+            if cannotBeInferred: return CannotBeInferredZcode()
+
+            LHS = self.visit(ast.left, param)
+            RHS = self.visit(ast.right, param)  
+            cannotBeInferred = self.LHS_RHS_expr(LHS, RHS, ast)
+            if cannotBeInferred: return CannotBeInferredZcode()
+
+            return NumberType()
+
+        elif op in ['=', '!=', '<', '>', '>=', '<=']:
+            LHS = NumberType()
+            RHS = left  
+            cannotBeInferred = self.LHS_RHS_expr(LHS, RHS, ast)
+            if cannotBeInferred: return CannotBeInferredZcode()
+
+            LHS = self.visit(ast.left, param)
+            RHS = self.visit(ast.right, param)    
+            cannotBeInferred = self.LHS_RHS_expr(LHS, RHS, ast)
+            if cannotBeInferred: return CannotBeInferredZcode()
+
             return BoolType()
-        
-        elif ast.op in ['and', 'or']:
-            check_types(BoolType())
+
+        elif op in ['and', 'or']:
+            LHS = BoolType()
+            RHS = left  
+            cannotBeInferred = self.LHS_RHS_expr(LHS, RHS, ast)
+            if cannotBeInferred: return CannotBeInferredZcode()
+
+            LHS = self.visit(ast.left, param)
+            RHS = self.visit(ast.right, param)   
+            cannotBeInferred = self.LHS_RHS_expr(LHS, RHS, ast)
+            if cannotBeInferred: return CannotBeInferredZcode()
+
             return BoolType()
-        
-        elif ast.op == '==':
-            check_types(StringType())
+
+        elif op == '==':
+            LHS = StringType()
+            RHS = self.visit(ast.right, param)  
+            cannotBeInferred = self.LHS_RHS_expr(LHS, RHS, ast)
+            if cannotBeInferred: return CannotBeInferredZcode()
+
+            LHS = self.visit(ast.left, param)
+            RHS = self.visit(ast.right, param)  
+            cannotBeInferred = self.LHS_RHS_expr(LHS, RHS, ast)
+            if cannotBeInferred: return CannotBeInferredZcode()
+
             return BoolType()
-        
-        elif ast.op == '...':
-            check_types(StringType())
+
+        elif op == '...':
+            LHS = StringType()
+            RHS = left  
+            cannotBeInferred = self.LHS_RHS_expr(LHS, RHS, ast)
+            if cannotBeInferred: return CannotBeInferredZcode()
+
+            LHS = self.visit(ast.left, param)
+            RHS = self.visit(ast.right, param)    
+            cannotBeInferred = self.LHS_RHS_expr(LHS, RHS, ast)
+            if cannotBeInferred: return CannotBeInferredZcode()
+
             return StringType()
-        
-        return Zcode() 
 
 
     # class UnaryOp(Expr): op: str, operand: Expr
     def visitUnaryOp(self, ast, param):
-      
-        operandExpr = self.visit(ast.operand , param)
-        
         if ast.op in ["+" , "-"]:
-            if isinstance(operandExpr, Zcode):
-                operandExpr.typ = NumberType()
-            elif not self.comparType(operandExpr , NumberType()):
-                raise TypeMismatchInExpression(ast)
-            
+            LHS = NumberType()
+            RHS = self.visit(ast.operand , param)  
+            cannotBeInferred = self.LHS_RHS_expr(LHS, RHS, ast)
+            if cannotBeInferred: return CannotBeInferredZcode()
+
             return NumberType()
- 
+        
         elif ast.op in ["not"]:
-            if isinstance(operandExpr, Zcode):
-                operandExpr.typ = BoolType()
-            elif not self.comparType(operandExpr , BoolType()):
-                raise TypeMismatchInExpression(ast)
+            LHS = BoolType()
+            RHS = self.visit(ast.operand , param)  
+            cannotBeInferred = self.LHS_RHS_expr(LHS, RHS, ast)
+            if cannotBeInferred: return CannotBeInferredZcode()
 
             return BoolType()
    
         
     # class ArrayCell(LHS): arr: Expr , idx: List[Expr]
     def visitArrayCell(self, ast, param):
-        arrExpr = self.visit(ast.arr , param)
-        
-        # How to inffer for array Zcode -> ArrayType(? Dim , ? eleTyp)
-        # Duy nói nếu pt được type của eleType thì oke , không thì Type can not be inffer
-        # if isinstance(arrExpr , Zcode):
-        #     arrExpr.typ = ArrayType()  
-            
-        if not isinstance(arrExpr , ArrayType):
+        arrExpr = self.visit(ast.arr, param)
+        if isinstance(arrExpr, (BoolType, StringType, NumberType)):
             raise TypeMismatchInExpression(ast)
-        
+        elif not isinstance(arrExpr, ArrayType):
+            return CannotBeInferredZcode()
+
         for id in ast.idx:
-            idTyp = self.visit(id , param)
-            if isinstance(idTyp , Zcode):
-                idTyp.typ = NumberType()
-            elif not self.comparType(idTyp , NumberType()):
-                raise TypeMismatchInExpression(ast)
+            LHS = NumberType()
+            RHS = self.visit(id, param)
+            cannotBeInferred = self.LHS_RHS_expr(LHS, RHS, ast)
+            if cannotBeInferred: return CannotBeInferredZcode()
       
         noDimen = len(arrExpr.size)
         noAccessDimen = len(ast.idx)
@@ -325,26 +405,22 @@ class StaticChecker(BaseVisitor, Utils):
     
     # class If(Stmt) expr: Expr , thenStmt: Stmt , elifStmt: List[Tuple[Expr, Stmt]] , elseStmt: Stmt = None   
     def visitIf(self, ast, param):
-        ifExpr = self.visit(ast.expr, param)
-        if isinstance(ifExpr , Zcode):
-            ifExpr.typ = BoolType()
-        elif not self.comparType(ifExpr, BoolType()):
-            raise TypeMismatchInStatement(ast) 
+        LHS = BoolType()
+        RHS = self.visit(ast.expr, param)
+        self.LHS_RHS_stmt(LHS, RHS, ast)
         
-        self.visit(ast.thenStmt , [{}] + param)
-        
+        self.visit(ast.thenStmt , param)
+         
         if ast.elifStmt:
             for elifTuple in ast.elifStmt:
-                (cond, stmt) = elifTuple
-                if isinstance(cond , Zcode):
-                    cond.typ = BoolType()
-                elif not self.comparType(self.visit(cond , param) , BoolType()):
-                    raise TypeMismatchInStatement(ast)
-                
-                self.visit(stmt , [{}] + param)
+                (expr, stmt) = elifTuple
+                LHS = BoolType()
+                RHS = self.visit(expr , param)
+                self.LHS_RHS_stmt(LHS, RHS, ast)
+                self.visit(stmt , param)
         
         if ast.elseStmt: 
-            self.visit(ast.elseStmt , [{}] + param)
+            self.visit(ast.elseStmt , param)
         
         
     def visitNumberType(self, ast, param): return NumberType()
@@ -380,7 +456,7 @@ class StaticChecker(BaseVisitor, Utils):
                 elif isinstance(typeArrayZcode.eleType[i], ArrayZcode):
                     if not self.setTypeArray(ArrayType(typeArray.size[1:], typeArray.eleType), typeArrayZcode.eleType[i]):
                         return False
-
+        
         return True
     
     
@@ -390,95 +466,41 @@ class StaticChecker(BaseVisitor, Utils):
     def visitArrayLiteral(self, ast, param):
         typ = None
         for item in ast.value:
-            checkTyp = self.visit(item, param)  # đệ quy tại đây nếu như multi-dimensional
-            if not (isinstance(checkTyp, Zcode) or isinstance(checkTyp, ArrayZcode)):
+            checkTyp = self.visit(item, param)  # Đệ quy tại đây nếu như multi-dimensional
+            if typ is None and isinstance(checkTyp, (BoolType, StringType, NumberType, ArrayType)):
                 typ = checkTyp
-                break
-            
+            elif isinstance(checkTyp, CannotBeInferredZcode):
+                return CannotBeInferredZcode()
+        
+        
         # Case 1: typ is None, meaning all elements are Zcode or ArrayZcode
         if typ is None:
-            # [Zcode , Zcode , [Zcode , Zcode]] 
             eleTyp = []
             for item in ast.value:
-                itemTyp = self.visit(item, param)
-                if isinstance(itemTyp, Zcode):
-                    eleTyp.append(itemTyp)
-                else:
-                    eleTyp.append(ArrayZcode(itemTyp.eleType))
-            # Trả về cho Assign , VarDecl , Return , Param của Function để có thể suy diễn được kiểu của ArrayLiteral 
+                eleTyp.append(self.visit(item, param))
             return ArrayZcode(eleTyp)
           
-        # Case 2: typ is a primitive type (StringType, BoolType, NumberType)
-        elif type(typ) in [StringType, BoolType, NumberType]:    
-            # [Zcode , Zcode , Zcode , NumberType()] 
-            for item in ast.value:
-                itemTyp = self.visit(item, param)
-                if isinstance(itemTyp, Zcode):
-                    itemTyp.typ = typ
-                elif isinstance(itemTyp, ArrayZcode) or not self.comparType(itemTyp, typ):
-                    raise TypeMismatchInExpression(ast)
-            
+        for item in ast.value:
+            LHS = typ 
+            RHS = self.visit(item, param)
+            cannotBeInferred = self.LHS_RHS_expr(LHS, RHS, ast)
+            if cannotBeInferred: return CannotBeInferredZcode()
+        
+        if  isinstance(typ, (StringType, BoolType, NumberType)):    
+            # Case 2: typ is a primitive type (StringType, BoolType, NumberType)
             return ArrayType([len(ast.value)] , typ)
-            
-        # Case 3: typ is an ArrayType
         else:
-            # ArrayType([2, 1] , NumberType())
-            # [Zcode , Zcode , [[NumberType()] , [NumberType()]] , [[Zcode] , Zcode]] => Oke
-            # [Zcode , [Zcode , Zcode] , [[NumberType()] , [NumberType()]] , [[StringType()] , Zcode]] => Error
-            for item in ast.value:
-                itemTyp = self.visit(item, param)
-                if isinstance(itemTyp, Zcode):
-                    itemTyp.typ = typ
-                    
-                elif isinstance(itemTyp, ArrayZcode):
-                    if not self.setTypeArray(typ , itemTyp):
-                        raise TypeMismatchInExpression(ast)
-                    
-                else: # itemTyp is arrayType
-                    if not self.comparType(typ , itemTyp):
-                        raise TypeMismatchInExpression(ast)
-
-            return ArrayType([len(ast.value)] + typ.size , typ.eleType)
+            # Case 3: typ is an ArrayType
+            return ArrayType([float(len(ast.value))] + typ.size , typ.eleType)
                  
          
     # class Return(Stmt): expr: Expr = None   
     def visitReturn(self, ast, param):
         self.Return = True
-        exprType = self.visit(ast.expr , param) if ast.expr else VoidType()
-        funcType = self.function.typ if self.function.typ else self.function
-        
-        if isinstance(funcType , (Zcode, ArrayZcode)) and isinstance(exprType , (Zcode, ArrayZcode)):
-            raise TypeCannotBeInferred(ast) 
-        
-        elif isinstance(funcType, Zcode):
-            if type(exprType) in [StringType, BoolType, NumberType, ArrayType, VoidType]:
-                funcType.typ = exprType
-            else:
-                raise TypeMismatchInStatement(ast)
-                
-        elif isinstance(funcType, ArrayZcode):
-            if type(exprType) is ArrayType:
-                if not self.setTypeArray(exprType , funcType):
-                    raise TypeMismatchInStatement(ast)
-            else:
-                raise TypeMismatchInStatement(ast)
-                
-        elif isinstance(exprType, Zcode):
-            if type(funcType) in [StringType, BoolType, NumberType, ArrayType]:
-                exprType.typ = funcType
-            else:
-                raise TypeMismatchInStatement(ast)
-                
-        elif isinstance(exprType, ArrayZcode):
-            if type(funcType) is ArrayType:
-                if not self.setTypeArray(funcType , exprType):
-                    raise TypeMismatchInStatement(ast)
-            else:
-                raise TypeMismatchInStatement(ast)
-            
-        elif not self.comparType(exprType, funcType):
-            raise TypeMismatchInStatement(ast)
-        
+        LHS = self.function.typ if self.function.typ else self.function
+        RHS = self.visit(ast.expr, param) if ast.expr else VoidType()
+        self.LHS_RHS_stmt(LHS, RHS, ast)
+
         
     # class CallStmt(Stmt): name: Id {name : str} , args: List[Expr] 
     def visitCallStmt(self, ast, param):
@@ -489,27 +511,12 @@ class StaticChecker(BaseVisitor, Utils):
         
         if len(ast.args) != len(func.param):
             raise TypeMismatchInStatement(ast)
-        
+       
         for i in range(len(ast.args)):
-            functionParamType = func.param[i]
-            passedArgumentType  = self.visit(ast.args[i], param)
+            LHS = func.param[i]
+            RHS  = self.visit(ast.args[i], param)
+            self.LHS_RHS_stmt(LHS, RHS, ast)
             
-            if isinstance(passedArgumentType , Zcode):
-                if type(functionParamType) in [StringType, BoolType, NumberType, ArrayType]:
-                    passedArgumentType.typ = functionParamType
-                else:
-                    raise TypeMismatchInStatement(ast)
-                
-            elif isinstance(passedArgumentType , ArrayZcode):
-                if type(functionParamType) is ArrayType:
-                    if not self.setTypeArray(functionParamType , passedArgumentType):
-                        raise TypeMismatchInStatement(ast)
-                else:
-                    raise TypeMismatchInStatement(ast)
-                
-            elif not self.comparType(passedArgumentType , functionParamType):
-                raise TypeMismatchInStatement(ast)
-        
         if func.typ is None:
             func.typ = VoidType()
             
@@ -530,24 +537,10 @@ class StaticChecker(BaseVisitor, Utils):
             raise TypeMismatchInExpression(ast)
         
         for i in range(len(ast.args)):
-            functionParamType = func.param[i]
-            passedArgumentType  = self.visit(ast.args[i], param)
-            
-            if isinstance(passedArgumentType , Zcode):
-                if type(functionParamType) in [StringType, BoolType, NumberType, ArrayType]:
-                    passedArgumentType.typ = functionParamType
-                else:
-                    raise TypeMismatchInExpression(ast)
-                
-            elif isinstance(passedArgumentType , ArrayZcode):
-                if type(functionParamType) is ArrayType:
-                    if not self.setTypeArray(functionParamType , passedArgumentType):
-                        raise TypeMismatchInExpression(ast)
-                else:
-                    raise TypeMismatchInExpression(ast)
-                
-            elif not self.comparType(passedArgumentType , functionParamType):
-                raise TypeMismatchInExpression(ast)
+            LHS = func.param[i]
+            RHS  = self.visit(ast.args[i], param)            
+            cannotBeInferred = self.LHS_RHS_expr(LHS, RHS, ast)
+            if cannotBeInferred: return CannotBeInferredZcode()
         
         if func.typ is None:
             return func
@@ -559,23 +552,6 @@ class StaticChecker(BaseVisitor, Utils):
         
     # class Assign(Stmt): lhs: Expr , exp: Expr
     def visitAssign(self, ast, param):
-        leftTyp = self.visit(ast.lhs, param)
-        rightTyp = self.visit(ast.rhs, param)
-
-        if isinstance(leftTyp, Zcode) and isinstance(rightTyp, Zcode):
-            raise TypeCannotBeInferred(ast)
-        
-        elif isinstance(leftTyp, Zcode):
-            leftTyp.typ = rightTyp
-        elif isinstance(rightTyp, Zcode):
-            rightTyp.typ = leftTyp
-        elif isinstance(leftTyp, ArrayType) and isinstance(rightTyp, ArrayZcode):
-            if not self.setTypeArray(leftTyp, rightTyp):
-                raise TypeMismatchInStatement(ast) 
-            
-        elif isinstance(leftTyp, ArrayZcode) and isinstance(rightTyp, ArrayType):
-            if not self.setTypeArray(rightTyp, leftTyp):
-                raise TypeMismatchInStatement(ast)
-            
-        elif not self.comparType(leftTyp, rightTyp):
-            raise TypeMismatchInStatement(ast)
+        LHS = self.visit(ast.lhs, param)
+        RHS = self.visit(ast.rhs, param)
+        self.LHS_RHS_stmt(LHS, RHS, ast)

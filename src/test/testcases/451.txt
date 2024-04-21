@@ -1,7 +1,9 @@
 
+            func foo(number a) return
+
             func main()begin
                 dynamic a
-                if (a) return
-                a <- true
+                foo(a)
+                number c <- a
             end
         

@@ -1,8 +1,8 @@
 
-            func VoTien()
             func main() begin
-                number VoTien_ <- VoTien()
-            end
-            func VoTien() begin
+                number a[1,2]
+                dynamic b
+                var c <- a[1]
+                c <- [1,2]
             end
         

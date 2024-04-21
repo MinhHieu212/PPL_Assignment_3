@@ -1,6 +1,5 @@
 
-            number a
-            string a 
-            
+            func foo(number a) 
+        
             func main() return
         

@@ -1,8 +1,7 @@
 
-            func foo() begin
-                dynamic a
-                return a
-            end
+            dynamic VoTien
+            number a <- VoTien
+            number b <- VoTien
 
             func main() return
         

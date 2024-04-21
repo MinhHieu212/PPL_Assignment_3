@@ -1,6 +1,5 @@
 
             func foo() begin
-                return 1
                 dynamic a
                 return a
             end

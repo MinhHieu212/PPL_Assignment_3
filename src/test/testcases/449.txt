@@ -2,6 +2,6 @@
             func foo(number a) return
 
             func main()begin
-                foo("1")
+                foo()
             end
         

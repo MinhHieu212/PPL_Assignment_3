@@ -2,10 +2,7 @@
             number a
             func VoTien(number a, number VoTien, number c)
             begin
-                begin
-                    number a
-                end
-                number a
+                string c
             end
             
             func main() return
